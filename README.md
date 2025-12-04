@@ -1,0 +1,1 @@
+This repo contains the code for the Cloudflare Worker that enables LLMs on OpenRouter without built-in web search (e.g. DeepSeek V3.2) to fetch the Goddess of Victory: NIKKE Wikia to grab important context.
