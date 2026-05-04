@@ -13,8 +13,19 @@ export default {
 
     const url = new URL(request.url)
     const page = url.searchParams.get('page')
+    const nonCharacterPage = url.searchParams.get('non-character')
 
-    if (!page) {
+    if (page && nonCharacterPage) {
+      return new Response(JSON.stringify({ error: "Specify either 'page' or 'non-character', not both" }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      })
+    }
+
+    if (!page && !nonCharacterPage) {
       return new Response(JSON.stringify({ error: 'Missing page parameter' }), {
         status: 400,
         headers: {
@@ -28,6 +39,29 @@ export default {
     const headers = { 'User-Agent': 'NikkeDBStoryGen/1.0' }
 
     try {
+      if (nonCharacterPage) {
+        const fullPageUrl = `${baseUrl}?action=parse&page=${encodeURIComponent(nonCharacterPage)}&format=json&prop=wikitext`
+        const fullPageResponse = await fetch(fullPageUrl, { headers })
+        const fullPageData = await fullPageResponse.json()
+
+        if (fullPageData.error) {
+          return new Response(JSON.stringify(fullPageData), {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
+          })
+        }
+
+        return new Response(JSON.stringify(fullPageData), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=3600'
+          }
+        })
+      }
+
       // First, get the list of sections to find the ones we want
       const sectionsUrl = `${baseUrl}?action=parse&page=${encodeURIComponent(page)}&format=json&prop=sections`
       const sectionsResponse = await fetch(sectionsUrl, { headers })
